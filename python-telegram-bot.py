@@ -1,28 +1,26 @@
-import telegram
-bot = telegram.bot(token='TOKEN') #Replace TOKEN with your token string
-from telegram.ext import Updater, CommandHandler, MessageHandler
+import os # to read the environment variables stored in our system
 
-#Updater: class telegram.ext.Updater(bot, update_queue)[source]
-# fetches updates for the bot either via long polling or by starting a webhook server. 
-# update_queue: Received updates are enqueued into the update_queue and
-# may be fetched from there to handle them appropriately.
+import telebot
 
-#CommandHandler: class telegram.ext.CommandHandler(command, callback, filters=None, block=True)
-# BaseHandler class to handle Telegram commands.
-# Commands are Telegram messages that start with /, optionally followed by an @ and the bot’s
-# name and/or some additional text. The handler will add a list to the CallbackContext 
-# named CallbackContext.args. It will contain a list of strings, which is the text
-# following the command split on single or consecutive whitespace characters
+BOT_TOKEN = os.environ.get('BOT_TOKEN')
 
-#MessageHandler: class telegram.ext.MessageHandler(filters, callback, block=True)
-#aseHandler class to handle Telegram messages. They might contain text, media or status updates.
-updater = Updater(bot, use_context=True) #Replace TOKEN with your token string
-dispatcher = updater.dispatcher
+bot = telebot.TeleBot(BOT_TOKEN)
 
-def hello(update, context):
-    context.bot.send_message(chat_id=update.effective_chat.id, text='Hello, World')
+# We then need to register message handlers. These message handlers contain filters that a message must pass.
+# If a message passes the filter, the decorated function is called and the incoming message is supplied as an argument.
+#This is a message handler that handles incoming /start and /hello commands
 
-hello_handler = CommandHandler('hello', hello)
-dispatcher.add_handler(hello_handler)
+@bot.message_handler(commands=['start', 'hello'])
+def send_welcome(message):
+    bot.reply_to(message, "Howdy, how are you doing?")
 
-updater.start_polling()
+# Any name is acceptable for a function that is decorated by a message handler, but it can only have one parameter (the message).
+# Let’s add another handler that echoes all incoming text messages back to the sender.
+# The code below uses a lambda expression to test a message.
+# Since we need to echo all the messages, we always return True from the lambda function
+
+@bot.message_handler(func=lambda msg: True)
+def echo_all(message):
+    bot.reply_to(message, message.text)
+
+bot.infinity_polling()
